@@ -6,7 +6,7 @@ Project Aether is a compact, secure, multi-sensor wireless node designed for env
 
 ## Assembled Hardware
 
-<img src="images/Aether_Wout:WCase.JPG" alt="Aether — Assembled Units" width="600">
+<img src="images/Aether&Wout:WCase.JPG" alt="Aether — Assembled Units" width="600">
 
 <img src="images/Top_Assemled.JPG" alt="Aether — top assembled" width="600">
 
