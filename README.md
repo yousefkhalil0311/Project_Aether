@@ -2,6 +2,8 @@
 
 Project Aether is a compact, secure, multi-sensor wireless node designed for environmental, motion, and location monitoring. It integrates long-range and short-range wireless communication, onboard sensing, secure cryptographic processing, and battery-powered operation in a portable form factor.
 
+RTOS: Zephyr
+
 ---
 
 ## Assembled Hardware
