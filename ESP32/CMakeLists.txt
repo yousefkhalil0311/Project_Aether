@@ -1,6 +1,9 @@
 # specify minimum CMake Version
 cmake_minimum_required(VERSION 3.20.0)
 
+# locate timeBase module
+set(ZEPHYR_EXTRA_MODULES "${CMAKE_SOURCE_DIR}/../modules/timeBase")
+
 # Locate Zephyr source
 find_package(
     Zephyr

@@ -1,0 +1,9 @@
+# Create a new option in menuconfig
+
+config TIMEBASE
+    bool "Basic get time and write to console"
+    default n           # Set library to be disabled by default
+    depends on PRINTK   # Needs printk to work
+    help
+        Adds a writeTime() function to write the current time on
+        to the console output.

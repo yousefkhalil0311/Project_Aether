@@ -1,0 +1,23 @@
+/ {
+
+    aliases {
+        button1 = &button_1;
+        led1 = &led_1;
+    };
+
+    buttons {
+        compatible = "gpio-keys";
+        polling-mode;
+        button_1: d4 {
+            gpios = <&gpio0 4 (GPIO_ACTIVE_LOW)>;
+        };
+    };
+
+    leds {
+        compatible = "gpio-leds";
+        led_1: d35 {
+            gpios = <&gpio0 35 (GPIO_ACTIVE_LOW)>;
+        };
+    };
+
+};

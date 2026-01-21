@@ -1,0 +1,4 @@
+name: timeBase
+build:
+  cmake: .
+  kconfig: Kconfig
