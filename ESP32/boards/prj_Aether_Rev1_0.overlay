@@ -5,6 +5,11 @@
         led1 = &led_1;
     };
 
+    chosen {
+        zephyr,console = &usb_serial;
+        zephyr,shell-uart = &usb_serial;
+    };
+
     buttons {
         compatible = "gpio-keys";
         polling-mode;
@@ -16,8 +21,12 @@
     leds {
         compatible = "gpio-leds";
         led_1: d35 {
-            gpios = <&gpio0 35 (GPIO_ACTIVE_LOW)>;
+            gpios = <&gpio1 35 (GPIO_ACTIVE_LOW)>;
         };
     };
 
+};
+
+&usb_serial {
+	status = "okay";
 };

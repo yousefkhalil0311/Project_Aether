@@ -1,0 +1,6 @@
+board:
+  name: ykt_aether
+  full_name: YKT Aether
+  vendor: YKT
+  socs:
+  - name: esp32s3
