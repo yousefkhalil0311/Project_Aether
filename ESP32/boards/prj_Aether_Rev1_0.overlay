@@ -2,7 +2,7 @@
 
     aliases {
         button1 = &button_1;
-        led1 = &led_1;
+        pps0 = &pps_0;
     };
 
     chosen {
@@ -14,17 +14,18 @@
         compatible = "gpio-keys";
         polling-mode;
         button_1: d4 {
-            gpios = <&gpio0 4 (GPIO_ACTIVE_LOW)>;
+            gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
         };
     };
 
-    leds {
-        compatible = "gpio-leds";
-        led_1: d35 {
-            gpios = <&gpio1 35 (GPIO_ACTIVE_LOW)>;
+    gnss-pps {
+        compatible = "gpio-keys";
+        polling-mode;
+        pps_0: d3 {
+            gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
         };
     };
-
+    
 };
 
 &usb_serial {

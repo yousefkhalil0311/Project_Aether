@@ -20,6 +20,7 @@
 		watchdog0 = &wdt0;
 		uart-0 = &uart0;
 		sw0 = &button0;
+		lora0 = &lora0;
 	};
 
 	chosen {
@@ -101,6 +102,26 @@
 	status = "okay";
 	pinctrl-0 = <&spim2_default>;
 	pinctrl-names = "default";
+
+	// Set chip select GPIO pins used for SPI devices here
+	cs-gpios = <&gpio1 37 GPIO_ACTIVE_LOW>;
+	
+	// LoRa module
+	lora0: sx1262@0 {
+		compatible = "semtech,sx1262";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+
+		// Current revision of hardware connected LoRa reset to sys reset. IO43 is an unused pin used as a placeholder.
+		reset-gpios = <&gpio1 43 GPIO_ACTIVE_LOW>;
+
+		// LoRa module DIO1 (interrupt) pin on GPIO35 -> bank 1 pin 3
+		dio1-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+
+		// LoRa module busy pin on GPIO39 -> bank 1 pin 7
+		busy-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
+
+	};
 };
 
 &spi3 {

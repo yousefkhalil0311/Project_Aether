@@ -15,7 +15,7 @@
 
 static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(DT_ALIAS(button1), gpios);
 
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led1), gpios);
+static const struct gpio_dt_spec gps_pps = GPIO_DT_SPEC_GET(DT_ALIAS(pps0), gpios);
 
 int main() {
 
@@ -26,10 +26,11 @@ int main() {
         return 0;
     }
 
-    if (!gpio_is_ready_dt(&led)){
-        printk("LED device not ready\n");
+    if (!gpio_is_ready_dt(&gps_pps)){
+        printk("Button device not ready\n");
         return 0;
     }
+    
 
     //Configure button pin as input
     ret = gpio_pin_configure_dt(&button, GPIO_INPUT);
@@ -38,10 +39,10 @@ int main() {
         return 0;
     }
 
-    //Configure LED pin as output
-    ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
+    //Configure GPS PPS pin as input
+    ret = gpio_pin_configure_dt(&gps_pps, GPIO_INPUT);
     if (ret < 0){
-        printk("Error %d: failed to configure LED pin\n", ret);
+        printk("Error %d: failed to configure GPS PPS pin\n", ret);
         return 0;
     }
 
@@ -53,8 +54,11 @@ int main() {
             return 0;
         }
 
-        //Set LED state to match button state
-        gpio_pin_set_dt(&led, val);
+        int ppsState = gpio_pin_get_dt(&gps_pps);
+        if (ppsState < 0){
+            printk("Error %d: failed to read GPS PPS pin\n", ppsState);
+            return 0;
+        }
 
         printk("Button state: %s\n", val ? "PRESSED" : "RELEASED");
 
