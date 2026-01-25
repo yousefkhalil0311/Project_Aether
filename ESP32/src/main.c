@@ -1,8 +1,13 @@
+//--------------------------------INCLUDES BEGIN----------------------------------//
+
+// C standard includes
 #include <stdio.h>
 
 // Zephyr includes
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/lora.h>
+#include <zephyr/logging/log.h>
 #include "zephyr/random/random.h"
 
 // Project specific includes
@@ -13,78 +18,126 @@
 #include "timeBase.h"
 #endif
 
-static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(DT_ALIAS(button1), gpios);
+//Register logging module
+#define LOG_LEVEL CONFIG_LOG_DEFAULT_LEVEL
+LOG_MODULE_REGISTER(aether_main);
 
-static const struct gpio_dt_spec gps_pps = GPIO_DT_SPEC_GET(DT_ALIAS(pps0), gpios);
+//--------------------------------DT ALIASES BEGIN--------------------------------//
+#define BUTTON_NODE DT_ALIAS(button1)
+#define GPS_PPS_NODE DT_ALIAS(pps0)
+#define LORA_NODE DT_ALIAS(lora0)
 
+
+//--------------------------------GPIO SPEC BEGIN----------------------------------//
+static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(BUTTON_NODE, gpios);
+
+static const struct gpio_dt_spec gps_pps = GPIO_DT_SPEC_GET(GPS_PPS_NODE, gpios);
+
+
+//--------------------------------LORA SPEC BEGIN----------------------------------//
+static const struct device *lora_dev = DEVICE_DT_GET(LORA_NODE);
+
+
+//--------------------------------CONFIG STRUCTS BEGIN-----------------------------//
+// LoRa device configuration
+struct lora_modem_config lora_cfg = {
+    .frequency = 915000000,
+    .bandwidth = BW_125_KHZ,
+    .datarate = SF_12,
+    .coding_rate = CR_4_8,
+    .preamble_len = 8,
+    .tx_power = 4,
+    .tx = true,
+    .iq_inverted = false,
+    .public_network = false,
+    .packet_crc_disable = false
+};
+
+
+//--------------------------------USER CODE BEGIN----------------------------------//
 int main() {
 
+    // Variable to hold return values
     int ret;
 
+    //--------------------------------DEVICE READY CHECKS BEGIN----------------------------//
+    // Check if button device is ready
     if (!gpio_is_ready_dt(&button)){
         printk("Button device not ready\n");
         return 0;
     }
 
+    // Check if GPS PPS device is ready
     if (!gpio_is_ready_dt(&gps_pps)){
         printk("Button device not ready\n");
         return 0;
     }
-    
 
-    //Configure button pin as input
+    // Check if LoRa device is ready
+    if (!device_is_ready(lora_dev)){
+        printk("LoRa device not ready\n");
+        return 0;
+    }
+
+
+    //--------------------------------PIN CONFIGURATION BEGIN------------------------------//
+    // Configure button pin as input
     ret = gpio_pin_configure_dt(&button, GPIO_INPUT);
     if (ret < 0){
         printk("Error %d: failed to configure button pin\n", ret);
         return 0;
     }
 
-    //Configure GPS PPS pin as input
+    // Configure GPS PPS pin as input
     ret = gpio_pin_configure_dt(&gps_pps, GPIO_INPUT);
     if (ret < 0){
         printk("Error %d: failed to configure GPS PPS pin\n", ret);
         return 0;
     }
 
+
+    //--------------------------------LORA CONFIGURATION BEGIN------------------------------//
+    // Configure LoRa device
+    ret = lora_config(lora_dev, &lora_cfg);
+    if (ret < 0){
+        printk("Error %d: failed to configure LoRa device\n", ret);
+        return 0;
+    }
+ 
+
     while(1){
 
+        // Read button state
         int val = gpio_pin_get_dt(&button);
         if (val < 0){
             printk("Error %d: failed to read button pin\n", val);
             return 0;
         }
 
+        // Read GPS PPS state
         int ppsState = gpio_pin_get_dt(&gps_pps);
         if (ppsState < 0){
             printk("Error %d: failed to read GPS PPS pin\n", ppsState);
             return 0;
         }
 
+        // Print button state
         printk("Button state: %s\n", val ? "PRESSED" : "RELEASED");
+
+        // Transmit LoRa message upon PPS signal
+        if (ppsState){
+            char message[] = "PPS Signal Detected";
+            ret = lora_send(lora_dev, (uint8_t*)message, sizeof(message));
+            if(ret < 0){
+                printk("Error %d: failed to send LoRa message\n", ret);
+            } else {
+                printk("LoRa message sent: %s\n", message);
+            }
+        }
 
         k_msleep(100);
     }
 
-    //Do forever
-    while(1){
-
-        //Generate and print psuedo-random number
-        uint32_t randNum = sys_rand32_get();
-
-        printk("Random Number: %u\n", randNum);
-
-        //Call hello function from my_lib
-        say_hello();
-
-        // Call the timeBase module function
-        #ifdef CONFIG_TIMEBASE
-        printTimeBaseMessage();
-        #endif
-
-        //Sleep for 1 second
-        k_msleep(1000);
-
-    }
-
+    // should never reach here
     return 0;
 }

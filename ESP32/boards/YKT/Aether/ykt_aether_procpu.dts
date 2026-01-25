@@ -108,8 +108,10 @@
 	
 	// LoRa module
 	lora0: sx1262@0 {
+		status = "okay";
 		compatible = "semtech,sx1262";
 		reg = <0>;
+		
 		spi-max-frequency = <8000000>;
 
 		// Current revision of hardware connected LoRa reset to sys reset. IO43 is an unused pin used as a placeholder.
