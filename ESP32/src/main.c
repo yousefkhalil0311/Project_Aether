@@ -7,6 +7,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/lora.h>
+#include <zephyr/drivers/display.h>
 #include <zephyr/logging/log.h>
 #include "zephyr/random/random.h"
 
@@ -19,13 +20,14 @@
 #endif
 
 //Register logging module
-#define LOG_LEVEL CONFIG_LOG_DEFAULT_LEVEL
+#define LOG_LEVEL CONFIG_LOG_DEBUG
 LOG_MODULE_REGISTER(aether_main);
 
 //--------------------------------DT ALIASES BEGIN--------------------------------//
 #define BUTTON_NODE DT_ALIAS(button1)
 #define GPS_PPS_NODE DT_ALIAS(pps0)
 #define LORA_NODE DT_ALIAS(lora0)
+#define OLED_NODE DT_ALIAS(oled0)
 
 
 //--------------------------------GPIO SPEC BEGIN----------------------------------//
@@ -38,7 +40,11 @@ static const struct gpio_dt_spec gps_pps = GPIO_DT_SPEC_GET(GPS_PPS_NODE, gpios)
 static const struct device *lora_dev = DEVICE_DT_GET(LORA_NODE);
 
 
-//--------------------------------CONFIG STRUCTS BEGIN-----------------------------//
+//--------------------------------DISPLAY SPEC BEGIN--------------------------------//
+static const struct device *oled_dev = DEVICE_DT_GET(OLED_NODE);
+
+
+//--------------------------------CONFIG STRUCTS BEGIN------------------------------//
 // LoRa device configuration
 struct lora_modem_config lora_cfg = {
     .frequency = 915000000,
@@ -52,6 +58,16 @@ struct lora_modem_config lora_cfg = {
     .public_network = false,
     .packet_crc_disable = false
 };
+
+struct display_buffer_descriptor buf_desc = {
+    .buf_size = 128 * 64 / 8,
+    .width = 128,
+    .height = 64,
+    .pitch = 128,
+    .frame_incomplete = false
+};
+
+uint8_t display_buffer[64 * 128 / 8];
 
 
 //--------------------------------USER CODE BEGIN----------------------------------//
@@ -79,6 +95,14 @@ int main() {
         return 0;
     }
 
+    // Check if OLED device is ready
+    if (!device_is_ready(oled_dev)){
+        printk("OLED device not ready\n");
+        return 0;
+    }
+    // Disable OLED display blanking
+    display_blanking_off(oled_dev);
+
 
     //--------------------------------PIN CONFIGURATION BEGIN------------------------------//
     // Configure button pin as input
@@ -105,6 +129,7 @@ int main() {
     }
  
 
+    uint8_t pattern = 0;
     while(1){
 
         // Read button state
@@ -124,8 +149,8 @@ int main() {
         // Print button state
         printk("Button state: %s\n", val ? "PRESSED" : "RELEASED");
 
-        // Transmit LoRa message upon PPS signal
-        if (ppsState){
+        // (Disabled) transmit LoRa message upon PPS signal
+        if (0){
             char message[] = "PPS Signal Detected";
             ret = lora_send(lora_dev, (uint8_t*)message, sizeof(message));
             if(ret < 0){
@@ -135,7 +160,12 @@ int main() {
             }
         }
 
-        k_msleep(100);
+        // Display to OLED when PPS signal active
+        memset(display_buffer, ppsState ? 0xFF : 0x00, sizeof(display_buffer));
+        display_write(oled_dev, 0, 0, &buf_desc, display_buffer);
+
+        k_msleep(10);
+
     }
 
     // should never reach here

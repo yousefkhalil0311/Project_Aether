@@ -21,6 +21,7 @@
 		uart-0 = &uart0;
 		sw0 = &button0;
 		lora0 = &lora0;
+		oled0 = &oled0;
 	};
 
 	chosen {
@@ -30,6 +31,7 @@
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
 		zephyr,bt-hci = &esp32_bt_hci;
+		zephyr,display = &oled0;
 	};
 
 	buttons {
@@ -75,9 +77,24 @@
 };
 
 &i2c0 {
-	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
 	pinctrl-0 = <&i2c0_default>;
 	pinctrl-names = "default";
+
+	// OLED display
+	oled0: sh1106@3C {
+		compatible = "sinowealth,sh1106";
+		reg = <0x3C>;
+		width = <128>;
+		height = <64>;
+		segment-offset = <2>;
+		page-offset = <0>;
+		display-offset = <0>;
+		multiplex-ratio = <63>;
+		prechargep = <0xD1>;
+	};
+
 };
 
 &i2c1 {
@@ -111,17 +128,27 @@
 		status = "okay";
 		compatible = "semtech,sx1262";
 		reg = <0>;
-		
+
 		spi-max-frequency = <8000000>;
 
 		// Current revision of hardware connected LoRa reset to sys reset. IO43 is an unused pin used as a placeholder.
-		reset-gpios = <&gpio1 43 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio1 43 GPIO_ACTIVE_HIGH>;
 
 		// LoRa module DIO1 (interrupt) pin on GPIO35 -> bank 1 pin 3
-		dio1-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+		dio1-gpios = <&gpio1 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
 
 		// LoRa module busy pin on GPIO39 -> bank 1 pin 7
-		busy-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
+		busy-gpios = <&gpio1 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+
+		// LoRa module antenna switch control pin on GPIO45 -> bank 1 pin 13
+		//rx-enable-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+		//tx-enable-gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
+
+		// DIO2 internally controls the RF switch for the WIO-sx1262 module
+		dio2-tx-enable;
+
+		// TCXO voltage supply pin on DIO3 (set to 3.0V as per module specifications (.2V less than Vcc))
+		dio3-tcxo-voltage = <0x06>;
 
 	};
 };
