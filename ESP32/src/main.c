@@ -29,14 +29,14 @@
 LOG_MODULE_REGISTER(aether_main);
 
 //--------------------------------DT ALIASES BEGIN--------------------------------//
-#define BUTTON_NODE DT_ALIAS(button1)
+//#define BUTTON_NODE DT_ALIAS(button1)
 #define GPS_PPS_NODE DT_ALIAS(pps0)
 #define LORA_NODE DT_ALIAS(lora0)
 #define OLED_NODE DT_ALIAS(oled0)
 
 
 //--------------------------------GPIO SPEC BEGIN----------------------------------//
-static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(BUTTON_NODE, gpios);
+//static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(BUTTON_NODE, gpios);
 
 static const struct gpio_dt_spec gps_pps = GPIO_DT_SPEC_GET(GPS_PPS_NODE, gpios);
 
@@ -83,10 +83,10 @@ int main() {
 
     //--------------------------------DEVICE READY CHECKS BEGIN----------------------------//
     // Check if button device is ready
-    if (!gpio_is_ready_dt(&button)){
-        printk("Button device not ready\n");
-        return 0;
-    }
+    // if (!gpio_is_ready_dt(&button)){
+    //     printk("Button device not ready\n");
+    //     return 0;
+    // }
 
     // Check if GPS PPS device is ready
     if (!gpio_is_ready_dt(&gps_pps)){
@@ -111,11 +111,11 @@ int main() {
 
     //--------------------------------PIN CONFIGURATION BEGIN------------------------------//
     // Configure button pin as input
-    ret = gpio_pin_configure_dt(&button, GPIO_INPUT);
-    if (ret < 0){
-        printk("Error %d: failed to configure button pin\n", ret);
-        return 0;
-    }
+    // ret = gpio_pin_configure_dt(&button, GPIO_INPUT);
+    // if (ret < 0){
+    //     printk("Error %d: failed to configure button pin\n", ret);
+    //     return 0;
+    // }
 
     // Configure GPS PPS pin as input
     ret = gpio_pin_configure_dt(&gps_pps, GPIO_INPUT);
@@ -143,17 +143,19 @@ int main() {
 
 	display_blanking_off(oled_dev);
 
+    //--------------------------------MAIN LOOP BEGIN---------------------------------------//
     while(1){
 
         // Handle LVGL tasks
         lv_task_handler();
+        int val = 1;
 
         // Read button state
-        int val = gpio_pin_get_dt(&button);
-        if (val < 0){
-            printk("Error %d: failed to read button pin\n", val);
-            return 0;
-        }
+        // int val = gpio_pin_get_dt(&button);
+        // if (val < 0){
+        //     printk("Error %d: failed to read button pin\n", val);
+        //     return 0;
+        // }
 
         // Read GPS PPS state
         int ppsState = gpio_pin_get_dt(&gps_pps);
@@ -175,19 +177,6 @@ int main() {
                 printk("LoRa message sent: %s\n", message);
             }
         }
-        
-        // cfb_framebuffer_init(oled_dev);
-        // cfb_set_kerning(oled_dev, 1);
-        // for(int fontIndex = 0; fontIndex < cfb_get_numof_fonts(oled_dev); fontIndex++){
-        //     cfb_framebuffer_clear(oled_dev, 0);
-        //     cfb_framebuffer_set_font(oled_dev, fontIndex);
-        //     cfb_print(oled_dev, "Hello", 0, 0);
-        //     cfb_framebuffer_finalize(oled_dev);
-        // k_msleep(1000);
-        // }
-
-        // Display to OLED when PPS signal active
-        //display_write(oled_dev, 0, 0, &buf_desc, display_buffer);
 
         k_msleep(10);
 

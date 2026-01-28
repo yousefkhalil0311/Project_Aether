@@ -1,21 +1,7 @@
 / {
 
     aliases {
-        button1 = &button_1;
         pps0 = &pps_0;
-    };
-
-    chosen {
-        zephyr,console = &usb_serial;
-        zephyr,shell-uart = &usb_serial;
-    };
-
-    buttons {
-        compatible = "gpio-keys";
-        polling-mode;
-        button_1: d4 {
-            gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
-        };
     };
 
     gnss-pps {
@@ -26,8 +12,4 @@
         };
     };
     
-};
-
-&usb_serial {
-	status = "okay";
 };

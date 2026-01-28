@@ -9,7 +9,12 @@
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 #include <zephyr/dt-bindings/input/esp32-touch-sensor-input.h>
 #include <espressif/partitions_0x0_amp.dtsi>
+
+// Default pin settings
 #include "ykt_aether-pinctrl.dtsi"
+
+// LVGL bindings include
+#include <zephyr/dt-bindings/lvgl/lvgl.h>
 
 / {
 	model = "YKT Aether ESP32S3 PROCPU";
@@ -26,15 +31,16 @@
 
 	chosen {
 		zephyr,sram = &sram1;
-		zephyr,console = &uart0;
-		zephyr,shell-uart = &uart0;
+		zephyr,console = &usb_serial;
+		zephyr,shell-uart = &usb_serial;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
 		zephyr,bt-hci = &esp32_bt_hci;
 		zephyr,display = &oled0;
 	};
 
-	buttons {
+	//physical button definitions
+	buttons: buttons {
 		compatible = "gpio-keys";
 
 		button0: button_0 {
@@ -42,11 +48,59 @@
 			label = "BOOT Button";
 			zephyr,code = <INPUT_KEY_0>;
 		};
+
+        button_up: d5 {
+            gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
+			zephyr,code = <INPUT_KEY_UP>;
+        };
+
+
+        button_down: d4 {
+            gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
+			zephyr,code = <INPUT_KEY_DOWN>;
+        };
+
+
+        button_left: d14 {
+            gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+			zephyr,code = <INPUT_KEY_LEFT>;
+        };
+
+
+        button_right: d16 {
+            gpios = <&gpio0 16 GPIO_ACTIVE_LOW>;
+			zephyr,code = <INPUT_KEY_RIGHT>;
+        };
+
+        button_enter: d15 {
+            gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+			zephyr,code = <INPUT_KEY_ENTER>;
+        };
+
+	};
+
+	// LVGL keypad input device (dpad buttons)
+	dpad0: keypad0 {
+		compatible = "zephyr,lvgl-keypad-input";
+		input = <&buttons>;
+
+		input-codes = <	INPUT_KEY_UP
+					   	INPUT_KEY_DOWN
+					   	INPUT_KEY_LEFT
+					   	INPUT_KEY_RIGHT
+					   	INPUT_KEY_ENTER>;
+
+		lvgl-codes = <	LV_KEY_UP
+						LV_KEY_DOWN
+						LV_KEY_LEFT
+						LV_KEY_RIGHT
+						LV_KEY_ENTER>;
+
 	};
 };
 
 &usb_serial {
-	status = "disabled";
+	status = "okay";
 };
 
 &uart0 {
@@ -93,6 +147,7 @@
 		display-offset = <0>;
 		multiplex-ratio = <63>;
 		prechargep = <0xD1>;
+		inversion-on;
 	};
 
 };
