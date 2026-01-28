@@ -83,9 +83,9 @@
 	pinctrl-names = "default";
 
 	// OLED display
-	oled0: sh1106@3C {
+	oled0: sh1106@3c {
 		compatible = "sinowealth,sh1106";
-		reg = <0x3C>;
+		reg = <0x3c>;
 		width = <128>;
 		height = <64>;
 		segment-offset = <2>;

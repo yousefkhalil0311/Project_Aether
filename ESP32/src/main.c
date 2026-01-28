@@ -2,14 +2,19 @@
 
 // C standard includes
 #include <stdio.h>
+#include <string.h>
 
 // Zephyr includes
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/lora.h>
 #include <zephyr/drivers/display.h>
+#include <zephyr/display/cfb.h>
 #include <zephyr/logging/log.h>
-#include "zephyr/random/random.h"
+#include <zephyr/random/random.h>
+
+// LVGL includes
+#include <lvgl.h>
 
 // Project specific includes
 #include "my_lib.h"
@@ -41,7 +46,7 @@ static const struct device *lora_dev = DEVICE_DT_GET(LORA_NODE);
 
 
 //--------------------------------DISPLAY SPEC BEGIN--------------------------------//
-static const struct device *oled_dev = DEVICE_DT_GET(OLED_NODE);
+static const struct device *oled_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 
 
 //--------------------------------CONFIG STRUCTS BEGIN------------------------------//
@@ -127,10 +132,21 @@ int main() {
         printk("Error %d: failed to configure LoRa device\n", ret);
         return 0;
     }
- 
+	
+    //--------------------------------LVGL GUI SETUP----------------------------------------//
+    lv_obj_t *hello_label;
 
-    uint8_t pattern = 0;
+    // Create a static label widget
+    hello_label = lv_label_create(lv_scr_act());
+    lv_label_set_text(hello_label, "Preoject_Aether\nLVGL");
+    lv_obj_align(hello_label, LV_ALIGN_TOP_MID, 0, 5);
+
+	display_blanking_off(oled_dev);
+
     while(1){
+
+        // Handle LVGL tasks
+        lv_task_handler();
 
         // Read button state
         int val = gpio_pin_get_dt(&button);
@@ -159,10 +175,19 @@ int main() {
                 printk("LoRa message sent: %s\n", message);
             }
         }
+        
+        // cfb_framebuffer_init(oled_dev);
+        // cfb_set_kerning(oled_dev, 1);
+        // for(int fontIndex = 0; fontIndex < cfb_get_numof_fonts(oled_dev); fontIndex++){
+        //     cfb_framebuffer_clear(oled_dev, 0);
+        //     cfb_framebuffer_set_font(oled_dev, fontIndex);
+        //     cfb_print(oled_dev, "Hello", 0, 0);
+        //     cfb_framebuffer_finalize(oled_dev);
+        // k_msleep(1000);
+        // }
 
         // Display to OLED when PPS signal active
-        memset(display_buffer, ppsState ? 0xFF : 0x00, sizeof(display_buffer));
-        display_write(oled_dev, 0, 0, &buf_desc, display_buffer);
+        //display_write(oled_dev, 0, 0, &buf_desc, display_buffer);
 
         k_msleep(10);
 
@@ -171,3 +196,4 @@ int main() {
     // should never reach here
     return 0;
 }
+
